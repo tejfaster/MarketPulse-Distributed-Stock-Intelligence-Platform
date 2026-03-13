@@ -18,9 +18,10 @@ logger = logging.getLogger(__name__)
 # kafka config
 KAFKA_BROKER = '10.95.208.20:9092'
 KAFKA_TOPIC = 'stock-prices'
-SPARK_MASTER = 'spark://10.95.208.20:7077'
-BRONZE_PATH = '/data/marketpulse/bronze/stocks'
-CHECKPOINT_PATH = '/data/marketpulse/checkpoints/bronze'
+# SPARK_MASTER = 'spark://10.95.208.20:7077'
+SPARK_MASTER = 'local[4]'
+BRONZE_PATH = '/Users/tejfaster/marketpulse-data/bronze/stocks'
+CHECKPOINT_PATH = '/Users/tejfaster/marketpulse-data/checkpoints/bronze'
 TRIGGER_SECONDS = '30 seconds'
 
 # Schema
