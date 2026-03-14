@@ -20,8 +20,8 @@ KAFKA_BROKER = '10.95.208.20:9092'
 KAFKA_TOPIC = 'stock-prices'
 # SPARK_MASTER = 'spark://10.95.208.20:7077'
 SPARK_MASTER = 'local[4]'
-BRONZE_PATH = '/Users/tejfaster/marketpulse-data/bronze/stocks'
-CHECKPOINT_PATH = '/Users/tejfaster/marketpulse-data/checkpoints/bronze'
+BRONZE_PATH = '/Users/tejfaster/Developer/Python/MarketPulse-data/bronze/stocks'
+CHECKPOINT_PATH = '/Users/tejfaster/Developer/Python/MarketPulse-data/checkpoints/bronze'
 TRIGGER_SECONDS = '30 seconds'
 
 # Schema
@@ -57,7 +57,8 @@ def ingest_to_bronze(spark):
     raw_stream = spark.readStream.format("kafka") \
             .option("kafka.bootstrap.servers",KAFKA_BROKER)\
             .option("subscribe", KAFKA_TOPIC) \
-            .option("startingOffsets","latest").load()
+            .option("startingOffsets","latest") \
+            .option("failOnDataLoss","false").load()
     
     parsed_stream = raw_stream.select(
         from_json(
