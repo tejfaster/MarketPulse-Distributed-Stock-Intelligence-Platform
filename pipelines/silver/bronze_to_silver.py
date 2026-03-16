@@ -5,10 +5,10 @@ from pyspark.sql.functions import (
     col, avg, stddev, lag, when, lit,
     round as spark_round, to_date, desc
 )
-
-# window_14 = Window.partitonBy("symbol") \
-#     .orderBy("timestamp") \
-#     .rowBetween(-13,0)
+from delta.tables import DeltaTable
+import os
+import re
+import json
 
 # Logging
 logging.basicConfig(
@@ -18,10 +18,11 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 # config
-SPARK_MASTER = 'local[4]'
+SPARK_MASTER = 'local[*]'
 BRONZE_PATH = '/Users/tejfaster/Developer/Python/MarketPulse-data/bronze/stocks'
-SILVER_PATH = '/Users/tejfaster/Developer/Python/Marketpulse-data/silver/stocks'
-CHECKPOINT_PATH = '/Users/tejfaster/Developer/Python/Marketpulse-data/checkpoints/silver'
+SILVER_PATH = '/Users/tejfaster/Developer/Python/MarketPulse-data/silver/stocks'
+CHECKPOINT_PATH = '/Users/tejfaster/Developer/Python/MarketPulse-data/checkpoints/silver'
+SILVER_PROGRESS_FILE = "/Users/tejfaster/Developer/Python/MarketPulse-data/silver/.progress.json"
 
 # SparkSession
 def create_spark_session():
@@ -34,10 +35,34 @@ def create_spark_session():
                 "io.delta.sql.DeltaSparkSessionExtension") \
         .config("spark.sql.catalog.spark_catalog",
                 "org.apache.spark.sql.delta.catalog.DeltaCatalog") \
+        .config("spark.databricks.delta.deltaLog.cacheSize", "0") \
         .getOrCreate()
 
-# RSI calcualtion
+# delta_log
+def get_last_safe_version(bronze_path):
+    log_path = os.path.join(bronze_path,"_delta_log")
 
+    last_checkpoint_file = os.path.join(log_path, "_last_checkpoint")
+    with open(last_checkpoint_file) as f:
+        import json
+        data = json.load(f)
+    
+    safe_version = data["version"]
+    print(f"Using version from _last_checkpoint: {safe_version}")
+    return safe_version
+
+def get_last_processed_version():
+    if os.path.exists(SILVER_PROGRESS_FILE):
+        with open(SILVER_PROGRESS_FILE) as f:
+            return json.load(f)["last_version"]
+    return 0   
+
+def save_progress(version):
+    os.makedirs(os.path.dirname(SILVER_PROGRESS_FILE),exist_ok=True)
+    with open(SILVER_PROGRESS_FILE, "w") as f:
+        json.dump({"last_version":version},f) 
+
+# RSI calcualtion
 def calculate_rsi(df,period = 14):
     # window per sysmbol order by time
     window = Window.partitionBy("symbol").orderBy("timestamp")
@@ -134,9 +159,23 @@ def calculate_bollinger_bands(df, period = 20):
 
 def process_silver(spark):
     logger.info("Starting Silver layer Processing")
-
     logger.info(f"Reading from Bronze: {BRONZE_PATH}")
-    df= spark.read.format("delta").load(BRONZE_PATH)
+
+    last_processed = get_last_processed_version()
+    safe_version = get_last_safe_version(BRONZE_PATH)
+
+    if last_processed >= safe_version:
+        print(f"Nothing new to proces. Bronze at v{safe_version},silver already at v{last_processed}")
+        return
+    
+    print(f"Reading bronze v{last_processed} -> v{safe_version}")
+
+    # df = spark.read.format("delta") \
+    #     .option("versionAsOf",safe_version) \
+    #     .load(BRONZE_PATH)
+    df = spark.read.format("delta") \
+        .option("versionAsOf",safe_version) \
+        .load(BRONZE_PATH)
 
     logger.info(f"Total records: {df.count()}")
     logger.info(f"Symbols: {df.select('symbol').distinct().count()}")
@@ -156,8 +195,7 @@ def process_silver(spark):
     df = df.withColumn("signal",
             when(col("rsi") > 70, "SELL")
             .when(col("rsi") < 30, "BUY")
-            .otherwise("HOLD")          
-        )
+            .otherwise("HOLD"))
     
     df = df.select(
         "symbol","price","prev_close",
@@ -174,13 +212,13 @@ def process_silver(spark):
         .partitionBy("date","symbol") \
         .save(SILVER_PATH)
     
-    logger.info(f"Silver layer complete! ")
+    logger.info(f"Silver layer complete!")
     logger.info(f"Records written: {df.count()}")
+    df.select("symbol","price","rsi","macd","signal").show(10,truncate=False)
 
-    logger.info("Sample data:")
-    df.select("symbol","price","rsi","macd","signal").show(10,truncate = False)
+    save_progress(safe_version)
+    print(f"Silver update.Progress saved at v{safe_version}")
 
-# Entry Point
 
 if __name__ == '__main__':
     try:
