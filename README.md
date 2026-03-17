@@ -242,7 +242,7 @@ host    all    all    10.0.0.0/8    md5
 - [x] Bronze layer ingestion
 - [x] Silver layer transformations
 - [x] Gold layer → PostgreSQL
-- [ ] Airflow orchestration
+- [x] Airflow orchestration
 - [ ] Power BI dashboard
 - [ ] RAPIDS GPU acceleration
 
