@@ -58,7 +58,7 @@ Yahoo Finance API
 | Processing | Apache Spark 3.5.1 (Standalone Cluster) |
 | Storage | Delta Lake 3.1.0 |
 | Serving | PostgreSQL 17.4 |
-| Orchestration | Apache Airflow ⏳ |
+| Orchestration | Apache Airflow 2.8.1 ✅ |
 | Dashboard | Power BI ⏳ |
 | ML Signals | RAPIDS cuML (CUDA GPU) ⏳ |
 | Language | Python 3.11 (Anaconda) |
@@ -79,8 +79,11 @@ MarketPulse/
 │   │   └── bronze_to_silver.py     # Delta → RSI, MACD, Bollinger
 │   └── gold/
 │       └── silver_to_gold.py       # Delta → PostgreSQL (3 tables)
-├── dags/
-│   └── marketpulse_dag.py          # Airflow DAGs ⏳
+├── airflow/
+│   ├── docker-compose.yaml         # Airflow stack (postgres + webserver + scheduler)
+│   ├── .env                        # Airflow secrets (gitignored)
+│   └── dags/
+│       └── marketpulse_pipeline.py  # Silver→Gold DAG
 ├── docs/
 │   └── architecture-decisions.md   # Technical decision log
 ├── config/
@@ -235,6 +238,66 @@ host    all    all    10.0.0.0/8    md5
 ```
 
 ---
+
+
+---
+
+## ⚙️ Orchestration (Airflow)
+
+The Silver and Gold batch layers are automated via **Apache Airflow 2.8.1** running on Docker.
+
+### DAG: `marketpulse_silver_gold`
+
+| Property | Value |
+|----------|-------|
+| Schedule | `0 17 * * 1-5` — 17:00 UTC, Monday–Friday |
+| Timezone | UTC (markets close ~21:00 UTC, Silver runs on delayed data) |
+| Executor | LocalExecutor |
+| Retries | 1 retry, 5-minute delay |
+
+### Pipeline Flow
+```
+17:00 UTC (Mon–Fri)
+       │
+       ▼
+  run_silver
+  spark-submit bronze_to_silver.py (local[*] on Mac)
+       │
+       ▼
+  wait_for_sync (90 seconds)
+  Gives Syncthing time to propagate Silver Delta files to Windows
+       │
+       ▼
+  run_gold
+  spark-submit silver_to_gold.py (spark://172.23.181.20:7077)
+  Distributed across Mac Master + Windows Worker
+  Writes 3 tables to PostgreSQL
+```
+
+### Why this design?
+- **Bronze runs continuously** — it's a streaming job consuming from Kafka 24/7. Airflow doesn't manage it.
+- **Silver + Gold run once daily** — batch jobs that depend on each other. Airflow enforces the dependency and schedule.
+- **LocalExecutor** — Spark already handles distribution. Airflow only needs to trigger jobs, not distribute them.
+- **SSH-based execution** — Airflow container SSHs into Mac host to call `spark-submit` natively in the Anaconda environment.
+- **90s sync wait** — Syncthing needs time to propagate new Silver Delta files from Mac to Windows before Gold reads them.
+
+### Starting Airflow
+```bash
+cd /Users/tejfaster/Developer/Python/MarketPulse/airflow
+docker compose up airflow-webserver airflow-scheduler -d
+```
+
+UI available at: `http://localhost:8081` (login: `airflow` / `airflow`)
+
+### Triggering manually
+```bash
+docker exec airflow-airflow-scheduler-1 airflow dags trigger marketpulse_silver_gold
+```
+
+### Stopping Airflow
+```bash
+docker compose down
+```
 
 ## 🗺️ Roadmap
 
