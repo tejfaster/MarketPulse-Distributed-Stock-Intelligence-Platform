@@ -104,7 +104,7 @@ def calculate_rsi(df,period = 14):
 
 # MACD Calculation
 
-def calculate_mcad(df):
+def calculate_macd(df):
     window = Window.partitionBy("symbol").orderBy("timestamp")
 
     # EMA window
@@ -187,7 +187,7 @@ def process_silver(spark):
     df = calculate_rsi(df)
 
     logger.info("Calculating MACD...")
-    df = calculate_mcad(df)
+    df = calculate_macd(df)
 
     logger.info("Calculating Bollinger Bands...")
     df = calculate_bollinger_bands(df)
