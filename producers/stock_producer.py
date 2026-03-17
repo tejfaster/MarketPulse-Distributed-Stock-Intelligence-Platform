@@ -14,7 +14,7 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 # Config 
-KAFKA_BROKER = '10.95.208.20:9092'
+KAFKA_BROKER = '172.23.181.20:9092'
 KAFKA_TOPIC = 'stock-prices'
 INTERVAL_SEC = 10
 
