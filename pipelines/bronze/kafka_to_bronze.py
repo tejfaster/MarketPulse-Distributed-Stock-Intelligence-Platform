@@ -16,10 +16,10 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 # kafka config
-KAFKA_BROKER = '10.95.208.20:9092'
+KAFKA_BROKER = '172.23.181.20:9092'
 KAFKA_TOPIC = 'stock-prices'
-# SPARK_MASTER = 'spark://10.95.208.20:7077'
-SPARK_MASTER = 'local[4]'
+SPARK_MASTER = 'local[*]'
+# SPARK_MASTER = 'spark://172.23.181.20:7077'
 BRONZE_PATH = '/Users/tejfaster/Developer/Python/MarketPulse-data/bronze/stocks'
 CHECKPOINT_PATH = '/Users/tejfaster/Developer/Python/MarketPulse-data/checkpoints/bronze'
 TRIGGER_SECONDS = '30 seconds'

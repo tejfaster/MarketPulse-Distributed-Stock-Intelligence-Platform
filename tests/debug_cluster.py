@@ -3,7 +3,7 @@ import os
 from pyspark.sql import SparkSession
 
 spark = SparkSession.builder \
-    .master("spark://10.95.208.20:7077") \
+    .master("spark://172.23.181.20:7077") \
     .appName("debug") \
     .config('spark.pyspark.python', '/usr/bin/python3.11') \
     .config('spark.pyspark.driver.python', '/usr/bin/python3.11') \

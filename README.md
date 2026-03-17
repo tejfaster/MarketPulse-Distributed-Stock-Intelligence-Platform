@@ -41,9 +41,9 @@ Yahoo Finance API
 | LAPTOP-46KBTNB2 (WSL2) | Ubuntu 22.04 | Spark Worker | 8 threads | 14.8 GiB |
 
 ### Cluster Configuration
-- **Spark Master:** `spark://10.95.208.20:7077`
-- **Kafka Broker:** `10.95.208.20:9092`
-- **PostgreSQL:** `10.95.208.20:5432`
+- **Spark Master:** `spark://172.23.181.20:7077`
+- **Kafka Broker:** `172.23.181.20:9092`
+- **PostgreSQL:** `172.23.181.20:5432`
 - **Data Sync:** Syncthing (Mac ↔ Windows)
 - **Python Version:** 3.11 (unified across both nodes)
 - **Path Resolution:** Symlink on Windows WSL2 maps Mac paths to local paths
@@ -134,7 +134,7 @@ cp config/.env.example config/.env
 
 ### 6 — Start Spark Worker (Windows WSL2)
 ```bash
-PYSPARK_PYTHON=/usr/bin/python3.11 /opt/spark/sbin/start-worker.sh spark://10.95.208.20:7077
+PYSPARK_PYTHON=/usr/bin/python3.11 /opt/spark/sbin/start-worker.sh spark://172.23.181.20:7077
 ```
 
 ### 7 — Run Stock Producer
@@ -145,7 +145,7 @@ python producers/stock_producer.py
 ### 8 — Run Bronze Layer
 ```bash
 spark-submit \
-  --master spark://10.95.208.20:7077 \
+  --master spark://172.23.181.20:7077 \
   --packages io.delta:delta-spark_2.12:3.1.0 \
   pipelines/bronze/kafka_to_bronze.py
 ```
@@ -160,7 +160,7 @@ spark-submit \
 ### 10 — Run Gold Layer
 ```bash
 spark-submit \
-  --master spark://10.95.208.20:7077 \
+  --master spark://172.23.181.20:7077 \
   --jars /opt/spark/jars/postgresql-42.7.3.jar \
   --packages io.delta:delta-spark_2.12:3.1.0 \
   pipelines/gold/silver_to_gold.py
