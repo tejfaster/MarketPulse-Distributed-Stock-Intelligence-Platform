@@ -299,6 +299,47 @@ docker exec airflow-airflow-scheduler-1 airflow dags trigger marketpulse_silver_
 docker compose down
 ```
 
+---
+
+
+## 📊 Power BI Dashboard
+
+A 5-page interactive dashboard built on top of the Gold PostgreSQL layer.
+
+### Pages
+
+| Page | Name | Description |
+|------|------|-------------|
+| 1 | Market Overview | KPI cards, stock summary table, Buy/Hold/Sell donut chart, category + signal slicers |
+| 2 | Signal Dashboard | RSI/MACD/Bollinger signal analysis, bar chart by category, overbought/oversold counts |
+| 3 | Price History | Area chart, OHLCV table, volume distribution by symbol and category |
+| 4 | Stock Detail | Drill through page — RSI history, MACD chart, price trend per symbol |
+| 5 | Tooltip | Hover popup showing quick stats for any symbol across all pages |
+
+### Features
+- **Drill Through** — right-click any symbol → jump to Stock Detail page filtered to that symbol
+- **Tooltip Page** — hover over any symbol → popup shows price, RSI, signal instantly
+- **Cross Filtering** — click any visual → all other visuals filter automatically
+- **Category Slicer** — filter by US Stocks / Indian Stocks / Crypto / Indices
+- **Dynamic Title** — Stock Detail page title updates automatically per symbol
+
+### DAX Measures (20+)
+- Buy / Sell / Hold Signal counts
+- RSI Status (Overbought / Oversold / Neutral)
+- Latest Price, RSI, MACD, Signal per symbol
+- Price Change % Daily
+- Overbought / Oversold counts
+- Positive MACD count
+- Category classification (US / Indian / Crypto / Indices)
+
+### Data Connection
+- **Source**: PostgreSQL 17.4 (`gold` schema)
+- **Mode**: Import (daily refresh after Airflow pipeline)
+- **Tables**: `gold.stock_prices`, `gold.technical_signals`, `gold.stock_summary`
+- **Refresh**: Manual after Airflow DAG completes at 17:00 UTC Mon–Fri
+
+---
+
 ## 🗺️ Roadmap
 
 - [x] Cluster setup (Spark + Kafka)
@@ -306,8 +347,8 @@ docker compose down
 - [x] Silver layer transformations
 - [x] Gold layer → PostgreSQL
 - [x] Airflow orchestration
-- [ ] Power BI dashboard
-- [ ] RAPIDS GPU acceleration
+- [x] Power BI dashboard
+
 
 ---
 
