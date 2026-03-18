@@ -64,10 +64,6 @@ plugins/
 *.sql.bak
 pgdata/
 
-# ─── Power BI ────────────────────────────────────────────────
-*.pbix
-dashboard/exports/
-
 # ─── OS Files ────────────────────────────────────────────────
 .DS_Store
 .DS_Store?

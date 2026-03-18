@@ -20,8 +20,6 @@ def get_base_path():
 BASE_PATH = get_base_path()
 SPARK_MASTER = 'spark://172.23.181.20:7077'
 SILVER_PATH = f'{BASE_PATH}/silver/stocks'
-
-# POSTGRES_URL = f"jdbc:postgresql://{os.getenv('POSTGRES_HOST')}:{os.getenv('POSTGRES_PORT')}/{os.getenv('POSTGRES_DB')}"
 POSTGRES_URL = f"jdbc:postgresql://172.23.181.20:{os.getenv('POSTGRES_PORT')}/{os.getenv('POSTGRES_DB')}"
 POSTGRES_USER = os.getenv('POSTGRES_USER')
 POSTGRES_PASS = os.getenv('POSTGRES_PASSWORD')
