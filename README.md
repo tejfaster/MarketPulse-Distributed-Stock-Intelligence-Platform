@@ -59,8 +59,7 @@ Yahoo Finance API
 | Storage | Delta Lake 3.1.0 |
 | Serving | PostgreSQL 17.4 |
 | Orchestration | Apache Airflow 2.8.1 ✅ |
-| Dashboard | Power BI ⏳ |
-| ML Signals | RAPIDS cuML (CUDA GPU) ⏳ |
+| Dashboard | Power BI |
 | Language | Python 3.11 (Anaconda) |
 | Data Sync | Syncthing |
 
