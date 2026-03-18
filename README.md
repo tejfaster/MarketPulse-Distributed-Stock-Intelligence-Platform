@@ -28,7 +28,7 @@ Yahoo Finance API
   (stock_prices, technical_signals, stock_summary)
        │
        ▼
-  Power BI Dashboard ⏳
+  Power BI Dashboard ✅
 ```
 
 ---
